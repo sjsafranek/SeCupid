@@ -56,7 +56,7 @@ class SeCupid(object):
 		self.driver.find_element(By.ID, "login_username").send_keys(self.username)
 		self.driver.find_element(By.ID, "login_password").send_keys(self.password)
 		self.driver.find_element(By.ID, "sign_in_button").click()
-
+		# CHECK FOR FAILURE
 		time.sleep(2)
 		self._cancelLoading()
 
