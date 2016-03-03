@@ -36,8 +36,8 @@ class SeCupid(object):
 		# Setup browser
 		self.username = username
 		self.password = password
-		self.driver = webdriver.Firefox()
-		# self.driver = webdriver.PhantomJS("phantomjs-2.0.0-linux/phantomjs")
+		# self.driver = webdriver.Firefox()
+		self.driver = webdriver.PhantomJS("phantomjs-2.0.0-linux/phantomjs")
 		self.driver.implicitly_wait(10)
 		#
 		self.update = False
@@ -274,3 +274,10 @@ class SeCupid(object):
 				button.click()
 				break
 
+	def getUsersFromDB(self):
+		""" Retrieves all user records from database
+			Returns:
+				users list(Models.User): list of User model objects 
+		"""
+		users = se.session.query(Models.User).all()
+		return users
