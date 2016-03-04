@@ -279,5 +279,5 @@ class SeCupid(object):
 			Returns:
 				users list(Models.User): list of User model objects 
 		"""
-		users = se.session.query(Models.User).all()
+		users = self.session.query(Models.User).all()
 		return users
