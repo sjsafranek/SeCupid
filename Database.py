@@ -110,6 +110,22 @@ class DB(object):
 		users = self.session.query(Models.User).filter(Models.User.liked==True).all()
 		return users
 
+	def getProfile(self, username):
+		""" Gets user profile from profiles table
+			Args:
+				username (str): okcupid username
+			Returns:
+				profile (str): okcupid profile html source
+		"""
+		profile = self.session.query(Models.Profile).filter(Models.Profile.username == username).first()
+		return profile
+		# if profile:
+		# 	udatab64 = base64.b64decode(profile.source)
+		# 	decoded = lzma.decompress(udatab64)
+		# 	return decoded
+		# else:
+		# 	return None
+
 	def saveProfile(self, username, profile_source):
 		""" Save profile to database. 
 			Profile linked to user in users table.
@@ -119,28 +135,24 @@ class DB(object):
 		"""
 		data = lzma.compress(profile_source.encode())
 		encoded = base64.b64encode(data).decode('utf-8')
-		profile = Models.Profile(username)
-		self.session.add(profile)
-		self.session.commit()
-		profile.source = encoded
-		self.session.commit()
-		user = self.getUser(username)
-		if not user:
-			user = Models.User(username)
-			self.session.add(user)
+		profile = self.getProfile(username)
+		if not profile:
+			print("Creating profile: %s" % username)
+			profile = Models.Profile(username)
+			self.session.add(profile)
 			self.session.commit()
-		user.profile.append(profile)
-		self.session.commit()
-
-	def getProfile(self, username):
-		""" Gets user profile from profiles table
-			Args:
-				username (str): okcupid username
-			Returns:
-				profile (str): okcupid profile html source
-		"""
-		profile = self.session.query(Models.Profile).filter(Models.Profile.username == username).first()
-		udatab64 = base64.b64decode(profile.source)
-		decoded = lzma.decompress(udatab64)
-		return decoded
+			profile.source = encoded
+			self.session.commit()
+			user = self.getUser(username)
+			if not user:
+				user = Models.User(username)
+				self.session.add(user)
+				self.session.commit()
+			user.profile.append(profile)
+			self.session.commit()
+		# elif self.update:
+		else:
+			print("Updating profile: %s" % username)
+			profile.source = encoded
+			self.session.commit()
 

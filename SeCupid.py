@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-# OkCupid_Se
-
 __author__ = "Stefan Safranek"
 __copyright__ = "Copyright 2016, SeCupid"
 __credits__ = ["Stefan Safranek"]
@@ -155,6 +153,7 @@ class SeCupid(object):
 		"""
 		url = "http://www.okcupid.com/profile/%s" % username
 		self.driver.get(url)
+		print("Page: %s" % url)
 		time.sleep(5)
 
 	def saveProfile(self, username):
@@ -164,6 +163,8 @@ class SeCupid(object):
 				username (str): OkCupid username
 		"""
 		self.visitProfile(username)
+		self.driver.find_element(By.CSS_SELECTOR, "div.essays2015-expand").click()
+		time.sleep(0.5)
 		source = self.driver.page_source
 		self.db.saveProfile(username, source)
 
