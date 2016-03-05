@@ -2,6 +2,15 @@
 
 # OkCupid_Se
 
+__author__ = "Stefan Safranek"
+__copyright__ = "Copyright 2016, SeCupid"
+__credits__ = ["Stefan Safranek"]
+__license__ = "MIT"
+__version__ = "1.0.1"
+__maintainer__ = "Stefan Safranek"
+__email__ = "https://github.com/sjsafranek"
+__status__ = "Development"
+
 import os
 import time
 import builtins
@@ -131,7 +140,8 @@ class SeCupid(object):
 					rating_like = user.find_element(By.CLASS_NAME, "rating_like")
 					liked = False
 				# submit new user to database
-				self.db.newUser(username, age, location, match, enemy, liked)
+				if self.db.newUser(username, age, location, match, enemy, liked):
+					self.scrape = True
 			except Exception as e:
 				self.takeScreenShot(time.time())
 				print(e)

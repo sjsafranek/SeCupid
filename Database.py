@@ -61,7 +61,6 @@ class DB(object):
 		user = self.getUser(username)
 		if not user:
 			print("Inserting new user:", username)
-			self.scrape = True
 			try:
 				user = Models.User(username)
 				user.age = age
@@ -71,10 +70,12 @@ class DB(object):
 				user.liked = liked
 				self.session.add(user)
 				self.session.commit()
+				return True
 			except Exception as e:
 				print(e)
 				traceback.print_stack()
 				self.session.rollback()
+				return False
 		elif self.update:
 			print("Update existing user:", username)
 			try:
@@ -84,10 +85,12 @@ class DB(object):
 				user.enemy = enemy
 				user.liked = liked
 				self.session.commit()
+				return False
 			except Exception as e:
 				print(e)
 				traceback.print_stack()
 				self.session.rollback()
+				return False
 		else:
 			print("User already exisits:", username)
 
