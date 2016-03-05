@@ -7,8 +7,12 @@ def scrape(usr, psw):
 	cupid = SeCupid.SeCupid(usr, psw, headless=True)
 	cupid.login()
 	for user in cupid.db.getUsers():
-		print("Scraping profile: %s" % user.username)
-		cupid.saveProfile(user.username)
+		try:
+			print("Scraping profile: %s" % user.username)
+			cupid.saveProfile(user.username)
+		except Exception as e:
+			print(e)
+			cupid.takeScreenShot(user.username)
 	cupid.driver.quit()
 
 if __name__ == "__main__":
