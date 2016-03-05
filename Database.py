@@ -108,6 +108,12 @@ class DB(object):
 		return users
 
 	def saveProfile(self, username, profile_source):
+		""" Save profile to database. 
+			Profile linked to user in users table.
+			Args:
+				username (str): okcupid username
+				profile_source (str): html source of profile page
+		"""
 		data = lzma.compress(profile_source.encode())
 		encoded = base64.b64encode(data).decode('utf-8')
 		profile = Models.Profile(username)
@@ -124,6 +130,12 @@ class DB(object):
 		self.session.commit()
 
 	def getProfile(self, username):
+		""" Gets user profile from profiles table
+			Args:
+				username (str): okcupid username
+			Returns:
+				profile (str): okcupid profile html source
+		"""
 		profile = self.session.query(Models.Profile).filter(Models.Profile.username == username).first()
 		udatab64 = base64.b64decode(profile.source)
 		decoded = lzma.decompress(udatab64)
