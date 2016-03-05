@@ -1,28 +1,28 @@
 #!/usr/bin/env python
 
-import Models
+import lzma
+import base64
 import builtins
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+
 engine = create_engine(
-        builtins.DATABASE_PATH,
-        convert_unicode=True,
-        echo=False
-    )
+		builtins.DATABASE_PATH,
+		convert_unicode=True,
+		echo=False
+	)
 
 db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
+										 autoflush=False,
+										 bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-def init_db():
-    """ initiate database """
-    # import Models
-    Base.metadata.create_all(bind=engine)
 
+import Models
 
 
 class DB(object):
@@ -30,10 +30,14 @@ class DB(object):
 
 	def __init__(self, update=False):
 		""" Create database connection """
-		init_db()
+		self._init_db()
 		Session = sessionmaker(bind=engine)
 		self.session = Session()
 		self.update = update
+
+	def _init_db(self):
+		""" initiate database """
+		Base.metadata.create_all(bind=engine)
 
 	def getUser(self, username):
 		""" Retrieves user from database
@@ -87,7 +91,7 @@ class DB(object):
 		else:
 			print("User already exisits:", username)
 
-	def getUsersFromDB(self):
+	def getUsers(self):
 		""" Retrieves all user records from database
 			Returns:
 				users list(Models.User): list of User model objects 
@@ -95,11 +99,33 @@ class DB(object):
 		users = self.session.query(Models.User).all()
 		return users
 
-	def getLikedUsersFromDB(self):
+	def getLikedUsers(self):
 		""" Retrieves liked user records from database
 			Returns:
 				users list(Models.User): list of User model objects 
 		"""
 		users = self.session.query(Models.User).filter(Models.User.liked==True).all()
 		return users
+
+	def saveProfile(self, username, profile_source):
+		data = lzma.compress(profile_source.encode())
+		encoded = base64.b64encode(data).decode('utf-8')
+		profile = Models.Profile(username)
+		self.session.add(profile)
+		self.session.commit()
+		profile.source = encoded
+		self.session.commit()
+		user = self.getUser(username)
+		if not user:
+			user = Models.User(username)
+			self.session.add(user)
+			self.session.commit()
+		user.profile.append(profile)
+		self.session.commit()
+
+	def getProfile(self, username):
+		profile = self.session.query(Models.Profile).filter(Models.Profile.username == username).first()
+		udatab64 = base64.b64decode(profile.source)
+		decoded = lzma.decompress(udatab64)
+		return decoded
 

@@ -5,12 +5,9 @@
 import os
 import time
 import builtins
-import Conf
-# import Models
-import Database
 import traceback
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker
+import Conf
+import Database
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -18,88 +15,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.action_chains import ActionChains
-
-
-
-# class DB(object):
-# 	""" Database for OkCupid Model Objects """
-
-# 	def __init__(self, update=False):
-# 		""" Create database connection """
-# 		Database.init_db()
-# 		Session = sessionmaker(bind=Database.engine)
-# 		self.session = Session()
-# 		self.update = update
-
-# 	def getUser(self, username):
-# 		""" Retrieves user from database
-# 			Args:
-# 				username (str): OkCupid username
-# 			Returns:
-# 				User object if username is in database
-# 				None if username not in database
-# 		"""
-# 		user = self.session.query(Models.User).filter(Models.User.username==username).first()
-# 		return user
-
-# 	def newUser(self, username, age, location, match, enemy, liked):
-# 		""" Adds user to database
-# 			Args:
-# 				username (str): OkCupid username
-# 				age (int): age of user
-# 				match (float): match percentage
-# 				liked (bool): Whether user has been `liked`
-# 		"""
-# 		user = self.getUser(username)
-# 		if not user:
-# 			print("Inserting new user:", username)
-# 			self.scrape = True
-# 			try:
-# 				user = Models.User(username)
-# 				user.age = age
-# 				user.location = location
-# 				user.match = match
-# 				user.enemy = enemy
-# 				user.liked = liked
-# 				self.session.add(user)
-# 				self.session.commit()
-# 			except Exception as e:
-# 				print(e)
-# 				traceback.print_stack()
-# 				self.session.rollback()
-# 		elif self.update:
-# 			print("Update existing user:", username)
-# 			try:
-# 				user.age = age
-# 				user.location = location
-# 				user.match = match
-# 				user.enemy = enemy
-# 				user.liked = liked
-# 				self.session.commit()
-# 			except Exception as e:
-# 				print(e)
-# 				traceback.print_stack()
-# 				self.session.rollback()
-# 		else:
-# 			print("User already exisits:", username)
-
-# 	def getUsersFromDB(self):
-# 		""" Retrieves all user records from database
-# 			Returns:
-# 				users list(Models.User): list of User model objects 
-# 		"""
-# 		users = self.session.query(Models.User).all()
-# 		return users
-
-# 	def getLikedUsersFromDB(self):
-# 		""" Retrieves liked user records from database
-# 			Returns:
-# 				users list(Models.User): list of User model objects 
-# 		"""
-# 		users = self.session.query(Models.User).filter(Models.User.liked==True).all()
-# 		return users
-
-
 
 
 class SeCupid(object):
@@ -231,6 +146,16 @@ class SeCupid(object):
 		url = "http://www.okcupid.com/profile/%s" % username
 		self.driver.get(url)
 		time.sleep(5)
+
+	def saveProfile(self, username):
+		""" Visits the profile page of a user
+			Extracts html and saves it do database
+			Args:
+				username (str): OkCupid username
+		"""
+		self.visitProfile(username)
+		source = self.driver.page_source
+		self.db.saveProfile(username, source)
 
 	def setFilters(self, **kwargs):
 		""" Scrapes `/match` page for user profiles """
