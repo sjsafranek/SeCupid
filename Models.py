@@ -1,9 +1,28 @@
 #!/usr/bin/python
 
-from Database import Base
+# from Database import Base
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column, Integer, String, Float, Boolean
 from sqlalchemy.orm import relationship, backref
+
+
+import builtins
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+engine = create_engine(
+        builtins.DATABASE_PATH,
+        convert_unicode=True,
+        echo=False
+    )
+
+db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=engine))
+Base = declarative_base()
+Base.query = db_session.query_property()
+
+
 
 class User(Base):
     """ users table """
