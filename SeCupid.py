@@ -6,11 +6,11 @@ import os
 import time
 import builtins
 import Conf
-import Models
+# import Models
 import Database
 import traceback
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -20,27 +20,108 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+
+# class DB(object):
+# 	""" Database for OkCupid Model Objects """
+
+# 	def __init__(self, update=False):
+# 		""" Create database connection """
+# 		Database.init_db()
+# 		Session = sessionmaker(bind=Database.engine)
+# 		self.session = Session()
+# 		self.update = update
+
+# 	def getUser(self, username):
+# 		""" Retrieves user from database
+# 			Args:
+# 				username (str): OkCupid username
+# 			Returns:
+# 				User object if username is in database
+# 				None if username not in database
+# 		"""
+# 		user = self.session.query(Models.User).filter(Models.User.username==username).first()
+# 		return user
+
+# 	def newUser(self, username, age, location, match, enemy, liked):
+# 		""" Adds user to database
+# 			Args:
+# 				username (str): OkCupid username
+# 				age (int): age of user
+# 				match (float): match percentage
+# 				liked (bool): Whether user has been `liked`
+# 		"""
+# 		user = self.getUser(username)
+# 		if not user:
+# 			print("Inserting new user:", username)
+# 			self.scrape = True
+# 			try:
+# 				user = Models.User(username)
+# 				user.age = age
+# 				user.location = location
+# 				user.match = match
+# 				user.enemy = enemy
+# 				user.liked = liked
+# 				self.session.add(user)
+# 				self.session.commit()
+# 			except Exception as e:
+# 				print(e)
+# 				traceback.print_stack()
+# 				self.session.rollback()
+# 		elif self.update:
+# 			print("Update existing user:", username)
+# 			try:
+# 				user.age = age
+# 				user.location = location
+# 				user.match = match
+# 				user.enemy = enemy
+# 				user.liked = liked
+# 				self.session.commit()
+# 			except Exception as e:
+# 				print(e)
+# 				traceback.print_stack()
+# 				self.session.rollback()
+# 		else:
+# 			print("User already exisits:", username)
+
+# 	def getUsersFromDB(self):
+# 		""" Retrieves all user records from database
+# 			Returns:
+# 				users list(Models.User): list of User model objects 
+# 		"""
+# 		users = self.session.query(Models.User).all()
+# 		return users
+
+# 	def getLikedUsersFromDB(self):
+# 		""" Retrieves liked user records from database
+# 			Returns:
+# 				users list(Models.User): list of User model objects 
+# 		"""
+# 		users = self.session.query(Models.User).filter(Models.User.liked==True).all()
+# 		return users
+
+
+
+
 class SeCupid(object):
 	""" Selenium Handler for OkCupid """
 
-	def __init__(self, username, password):
+	def __init__(self, username, password, headless=False):
 		""" Initiate SeCupid Class
 			Args:
 				username (str): OkCupid username
 				password (str): OkCupid password
 		"""
 		# setup database
-		Database.init_db()
-		Session = sessionmaker(bind=Database.engine)
-		self.session = Session()
+		self.db = Database.DB()
 		# Setup browser
 		self.username = username
 		self.password = password
-		# self.driver = webdriver.Firefox()
-		self.driver = webdriver.PhantomJS("phantomjs-2.0.0-linux/phantomjs")
+		if headless:
+			self.driver = webdriver.PhantomJS("phantomjs-2.0.0-linux/phantomjs")
+		else:
+			self.driver = webdriver.Firefox()
 		self.driver.implicitly_wait(10)
-		#
-		self.update = False
+		# options
 		self.scrape = True
 
 	def _cancelLoading(self):
@@ -57,6 +138,9 @@ class SeCupid(object):
 		self.driver.find_element(By.ID, "login_password").send_keys(self.password)
 		self.driver.find_element(By.ID, "sign_in_button").click()
 		# CHECK FOR FAILURE
+		if "Your info was incorrect. Try again." in self.driver.find_element(By.TAG_NAME, "body").text:
+			self.driver.quit()
+			raise ValueError("Your info was incorrect. Try again.")
 		time.sleep(2)
 		self._cancelLoading()
 
@@ -84,58 +168,6 @@ class SeCupid(object):
 				filename (str): save file for screenshot
 		"""
 		self.driver.save_screenshot(str(filename) + '.png')
-
-	def getUser(self, username):
-		""" Retrieves user from database
-			Args:
-				username (str): OkCupid username
-			Returns:
-				User object if username is in database
-				None if username not in database
-		"""
-		user = self.session.query(Models.User).filter(Models.User.username==username).first()
-		return user
-
-	def newUser(self, username, age, location, match, enemy, liked):
-		""" Adds user to database
-			Args:
-				username (str): OkCupid username
-				age (int): age of user
-				match (float): match percentage
-				liked (bool): Whether user has been `liked`
-		"""
-		user = self.getUser(username)
-		if not user:
-			print("Inserting new user:", username)
-			self.scrape = True
-			try:
-				user = Models.User(username)
-				user.age = age
-				user.location = location
-				user.match = match
-				user.enemy = enemy
-				user.liked = liked
-				self.session.add(user)
-				self.session.commit()
-			except Exception as e:
-				print(e)
-				traceback.print_stack()
-				self.session.rollback()
-		elif self.update:
-			print("Update existing user:", username)
-			try:
-				user.age = age
-				user.location = location
-				user.match = match
-				user.enemy = enemy
-				user.liked = liked
-				self.session.commit()
-			except Exception as e:
-				print(e)
-				traceback.print_stack()
-				self.session.rollback()
-		else:
-			print("User already exisits:", username)
 
 	def getAllUsers(self):
 		""" Scrapes `/match` page for user profiles """
@@ -183,7 +215,8 @@ class SeCupid(object):
 				except NoSuchElementException:
 					rating_like = user.find_element(By.CLASS_NAME, "rating_like")
 					liked = False
-				self.newUser(username, age, location, match, enemy, liked)
+				# submit new user to database
+				self.db.newUser(username, age, location, match, enemy, liked)
 			except Exception as e:
 				self.takeScreenShot(time.time())
 				print(e)
@@ -274,10 +307,3 @@ class SeCupid(object):
 				button.click()
 				break
 
-	def getUsersFromDB(self):
-		""" Retrieves all user records from database
-			Returns:
-				users list(Models.User): list of User model objects 
-		"""
-		users = self.session.query(Models.User).all()
-		return users
