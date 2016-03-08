@@ -163,7 +163,10 @@ class SeCupid(object):
 				username (str): OkCupid username
 		"""
 		self.visitProfile(username)
-		self.driver.find_element(By.CSS_SELECTOR, "div.essays2015-expand").click()
+		try:
+			self.driver.find_element(By.CSS_SELECTOR, "div.essays2015-expand").click()
+		except:
+			pass
 		time.sleep(0.5)
 		source = self.driver.page_source
 		self.db.saveProfile(username, source)

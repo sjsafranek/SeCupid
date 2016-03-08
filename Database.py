@@ -156,3 +156,8 @@ class DB(object):
 			profile.source = encoded
 			self.session.commit()
 
+	def decodeProfile(self, encoded):
+		udatab64 = base64.b64decode(encoded)
+		decoded = lzma.decompress(udatab64)
+		return decoded
+
