@@ -4,7 +4,8 @@ import argparse
 import SeCupid
 
 def scrape(usr, psw):
-	cupid = SeCupid.SeCupid(usr, psw, headless=True)
+	# cupid = SeCupid.SeCupid(usr, psw, headless=True)
+	cupid = SeCupid.SeCupid(usr, psw, headless=False)
 	cupid.login()
 	for user in cupid.db.getUsers():
 		try:

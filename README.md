@@ -8,5 +8,3 @@
 	
 	se.login()
 
-	se.setFilters(monogamous=True, single=True, age_max=25, age_min=38, men=False, women=True)
-

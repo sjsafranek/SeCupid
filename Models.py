@@ -24,6 +24,8 @@ class User(Base):
     match = Column(Float, unique=False)
     enemy = Column(Float, unique=False)
     liked = Column(Boolean, unique=False)
+    messaged = Column(Boolean, unique=False)
+    messaged_date = Column(DateTime, unique=False)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     # created_date = Column(default=func.now())
     profile = relationship("Profile", backref="profiles")

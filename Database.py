@@ -24,6 +24,8 @@ Base.query = db_session.query_property()
 
 import Models
 
+from utils.ligneous import log
+
 
 class DB(object):
 	""" Database for OkCupid Model Objects """
@@ -34,6 +36,7 @@ class DB(object):
 		Session = sessionmaker(bind=engine)
 		self.session = Session()
 		self.update = update
+		self.logger = log("DB")
 
 	def _init_db(self):
 		""" initiate database """
@@ -60,7 +63,7 @@ class DB(object):
 		"""
 		user = self.getUser(username)
 		if not user:
-			print("Inserting new user:", username)
+			self.logger.info("Insert: " + username)
 			try:
 				user = Models.User(username)
 				user.age = age
@@ -72,12 +75,12 @@ class DB(object):
 				self.session.commit()
 				return True
 			except Exception as e:
-				print(e)
+				self.logger.error(e)
 				traceback.print_stack()
 				self.session.rollback()
 				return False
 		elif self.update:
-			print("Update existing user:", username)
+			self.logger.info("Update: " + username)
 			try:
 				user.age = age
 				user.location = location
@@ -87,12 +90,12 @@ class DB(object):
 				self.session.commit()
 				return False
 			except Exception as e:
-				print(e)
+				self.logger.error(e)
 				traceback.print_stack()
 				self.session.rollback()
 				return False
-		else:
-			print("User already exisits:", username)
+		#else:
+		#	self.logger.info("User already exisits:", username)
 
 	def getUsers(self):
 		""" Retrieves all user records from database
@@ -137,7 +140,7 @@ class DB(object):
 		encoded = base64.b64encode(data).decode('utf-8')
 		profile = self.getProfile(username)
 		if not profile:
-			print("Creating profile: %s" % username)
+			self.logger.info("Creating profile: %s" % username)
 			profile = Models.Profile(username)
 			self.session.add(profile)
 			self.session.commit()
@@ -152,7 +155,7 @@ class DB(object):
 			self.session.commit()
 		# elif self.update:
 		else:
-			print("Updating profile: %s" % username)
+			self.logger.info("Updating profile: %s" % username)
 			profile.source = encoded
 			self.session.commit()
 
