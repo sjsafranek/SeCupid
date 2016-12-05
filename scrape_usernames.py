@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import argparse
 import secupid
+import argparse
 
 def scrape(usr, psw):
 	cupid = secupid.SeCupid(usr, psw, "chrome")

@@ -10,7 +10,7 @@ __status__ = "Development"
 __date__ = "12/04/16"
 
 #from .Conf import *
-from .Database import DB
+from .Database import Database
 from .Error import DriverTypeError
 from .utils.ligneous import log
 
