@@ -7,8 +7,8 @@ import traceback
 from datetime import datetime
 from selenium.webdriver.common.by import By
 
-usr = "sjsafranek@gmail.com"
-psw = "sjstmp82"
+usr = sys.argv[1]
+psw = sys.argv[2]
 
 cupid = SeCupid.SeCupid(usr, psw, headless=False)
 cupid.login()
