@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
 import argparse
-import SeCupid
+import secupid
 
 def scrape(usr, psw):
-	# cupid = SeCupid.SeCupid(usr, psw, headless=True)
-	cupid = SeCupid.SeCupid(usr, psw, headless=False)
+	cupid = secupid.SeCupid(usr, psw, "chrome")
 	cupid.login()
 	for user in cupid.db.getUsers():
 		try:

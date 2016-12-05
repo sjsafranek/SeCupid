@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
+from .Database import Base
+
 import datetime
-from Database import Base
 from sqlalchemy import ForeignKey
 # from sqlalchemy.sql import func
 from sqlalchemy import Column

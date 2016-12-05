@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from .Conf import *
+from .utils.ligneous import log
+
 import lzma
 import base64
 import builtins
@@ -21,13 +24,10 @@ db_session = scoped_session(sessionmaker(autocommit=False,
 Base = declarative_base()
 Base.query = db_session.query_property()
 
-
-import Models
-
-from utils.ligneous import log
+from .Models import *
 
 
-class DB(object):
+class Database(object):
 	""" Database for OkCupid Model Objects """
 
 	def __init__(self, update=False):
@@ -50,7 +50,7 @@ class DB(object):
 				User object if username is in database
 				None if username not in database
 		"""
-		user = self.session.query(Models.User).filter(Models.User.username==username).first()
+		user = self.session.query(User).filter(User.username==username).first()
 		return user
 
 	def newUser(self, username, age, location, match, enemy, liked):
@@ -65,7 +65,7 @@ class DB(object):
 		if not user:
 			self.logger.info("Insert: " + username)
 			try:
-				user = Models.User(username)
+				user = User(username)
 				user.age = age
 				user.location = location
 				user.match = match
@@ -102,7 +102,7 @@ class DB(object):
 			Returns:
 				users list(Models.User): list of User model objects 
 		"""
-		users = self.session.query(Models.User).all()
+		users = self.session.query(User).all()
 		return users
 
 	def getLikedUsers(self):
@@ -110,7 +110,7 @@ class DB(object):
 			Returns:
 				users list(Models.User): list of User model objects 
 		"""
-		users = self.session.query(Models.User).filter(Models.User.liked==True).all()
+		users = self.session.query(User).filter(User.liked==True).all()
 		return users
 
 	def getProfile(self, username):
@@ -148,7 +148,7 @@ class DB(object):
 			self.session.commit()
 			user = self.getUser(username)
 			if not user:
-				user = Models.User(username)
+				user = User(username)
 				self.session.add(user)
 				self.session.commit()
 			user.profile.append(profile)

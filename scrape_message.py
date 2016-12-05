@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import SeCupid
+import secupid
 
 import sys
 import time
@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 usr = sys.argv[1]
 psw = sys.argv[2]
 
-cupid = SeCupid.SeCupid(usr, psw, headless=False)
+cupid = secupid.SeCupid(usr, psw, "chrome")
 cupid.login()
 
 for user in cupid.db.getUsers():

@@ -1,20 +1,24 @@
 #!/usr/bin/python
 
-__author__ = "Stefan Safranek"
+__authors__ = ["Stefan Safranek"]
 __copyright__ = "Copyright 2016, SeCupid"
-__credits__ = ["Stefan Safranek"]
 __license__ = "MIT"
-__version__ = "1.1.1"
+__version__ = "1.2.1"
 __maintainer__ = "Stefan Safranek"
 __email__ = "https://github.com/sjsafranek"
 __status__ = "Development"
+__date__ = "12/04/16"
+
+#from .Conf import *
+from .Database import DB
+from .Error import DriverTypeError
+from .utils.ligneous import log
 
 import os
 import time
 import builtins
 import traceback
-import Conf
-import Database
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -23,28 +27,39 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.action_chains import ActionChains
 
-from utils.ligneous import log
+
+class Browser(object):
+	""" Selenium Driver Handler """
+	def __init__(self, driver_type="firefox"):
+		if "firefox" == driver_type:
+			self.driver = webdriver.Firefox()
+		elif "headless" == driver_type:
+			self.driver = webdriver.PhantomJS("phantomjs-2.0.0-linux/phantomjs")
+		elif "chrome"  == driver_type:
+			self.driver = webdriver.Chrome("./chromedriver")
+		else:
+			# CREATE NEW ERROR TYPE
+			raise DriverTypeError(driver_type, "chrome, firefox, headless")
 
 
-class SeCupid(object):
+class SeCupid(Browser):
 	""" Selenium Handler for OkCupid """
 
-	def __init__(self, username, password, headless=False):
+	def __init__(self, username, password, driver_type):
 		""" Initiate SeCupid Class
 			Args:
 				username (str): OkCupid username
 				password (str): OkCupid password
 		"""
 		# setup database
-		self.db = Database.DB()
+		#self.db = Database.DB()
+		self.db = Database()
 		# Setup browser
 		self.username = username
 		self.password = password
-		if headless:
-			self.driver = webdriver.PhantomJS("phantomjs-2.0.0-linux/phantomjs")
-		else:
-			# self.driver = webdriver.Firefox()
-			self.driver = webdriver.Chrome("./chromedriver")
+		
+		Browser.__init__(self, driver_type)
+
 		self.driver.implicitly_wait(10)
 		# options
 		self.scrape = True

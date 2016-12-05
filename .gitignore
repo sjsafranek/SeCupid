@@ -2,4 +2,3 @@ __pycache__
 *.db
 *.log
 *.png
-message_all.py
