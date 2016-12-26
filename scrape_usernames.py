@@ -3,8 +3,10 @@
 import secupid
 import argparse
 
-def scrape(usr, psw):
+def scrape(usr, psw, fast):
 	cupid = secupid.SeCupid(usr, psw, "chrome")
+	if fast:
+		cupid.db.getUsers()
 	cupid.login()
 	while cupid.scrape:
 		cupid.getAllUsers()
@@ -20,5 +22,10 @@ if __name__ == "__main__":
 						type=str,
 					 	required=True,
 						help='okcupid password')
+	parser.add_argument('-f', 
+						# '--fast',
+						action="store_true",
+					 	required=False,
+						help='fast mode')
 	args = parser.parse_args()
-	scrape(args.u, args.p)
+	scrape(args.u, args.p, args.f)

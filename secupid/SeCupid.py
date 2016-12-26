@@ -3,7 +3,7 @@
 __authors__ = ["Stefan Safranek"]
 __copyright__ = "Copyright 2016, SeCupid"
 __license__ = "MIT"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __maintainer__ = "Stefan Safranek"
 __email__ = "https://github.com/sjsafranek"
 __status__ = "Development"
@@ -13,6 +13,7 @@ __date__ = "12/04/16"
 from .Database import Database
 from .Error import DriverTypeError
 from .utils.ligneous import log
+from .utils import ProgressBar
 
 import os
 import time
@@ -121,49 +122,62 @@ class SeCupid(Browser):
 		self.scrape = False
 		self._load_all_users()
 		users = self.driver.find_elements(By.CLASS_NAME, "match_card_text")
+		# Progress bar
+		widgets = [ProgressBar.Bar(left='[',right=']'), ProgressBar.Percentage(),' ', ProgressBar.ETA()]
+		pbar = ProgressBar.ProgressBar(widgets=widgets, maxval=len(users))
+		pbar.start()
+
+		c = 0
 		for user in users:
 			username = user.find_element(By.CLASS_NAME, "username").text
-			try:
-				# Age
-				age = user.find_element(By.CLASS_NAME, "age").text
-				if age == "-":
-					age = 0
-				else:
-					age = int(age)
-				# Location
-				location = user.find_element(By.CLASS_NAME, "location").text
-				# Match
-				match_wrapper = user.find_element(By.CSS_SELECTOR, "div.percentage_wrapper.match")
-				match = match_wrapper.find_element(By.CLASS_NAME, "percentage").text
-				match = match.replace("%","")
-				if match == "—":
-					match = 0
-				else:
-					match = int(match)
-				# Enemy
-				enemy_wrapper = user.find_element(By.CSS_SELECTOR, "div.percentage_wrapper.enemy")
-				enemy = enemy_wrapper.find_element(By.CLASS_NAME, "percentage").text
-				enemy = enemy.replace("%","")
-				if enemy == "—":
-					enemy = 0
-				else:
-					enemy = int(enemy)
-				# Like status
-				liked = False
+			# check db cache before collecting data
+			if username not in self.db._cache:
 				try:
-					rating_liked = user.find_element(By.CLASS_NAME, "rating_liked")
-					liked = True
-				except NoSuchElementException:
-					rating_like = user.find_element(By.CLASS_NAME, "rating_like")
+					# Age
+					age = user.find_element(By.CLASS_NAME, "age").text
+					if age == "-":
+						age = 0
+					else:
+						age = int(age)
+					# Location
+					location = user.find_element(By.CLASS_NAME, "location").text
+					# Match
+					match_wrapper = user.find_element(By.CSS_SELECTOR, "div.percentage_wrapper.match")
+					match = match_wrapper.find_element(By.CLASS_NAME, "percentage").text
+					match = match.replace("%","")
+					if match == "—":
+						match = 0
+					else:
+						match = int(match)
+					# Enemy
+					enemy_wrapper = user.find_element(By.CSS_SELECTOR, "div.percentage_wrapper.enemy")
+					enemy = enemy_wrapper.find_element(By.CLASS_NAME, "percentage").text
+					enemy = enemy.replace("%","")
+					if enemy == "—":
+						enemy = 0
+					else:
+						enemy = int(enemy)
+					# Like status
 					liked = False
-				# submit new user to database
-				if self.db.newUser(username, age, location, match, enemy, liked):
-					self.scrape = True
-			except Exception as e:
-				self.takeScreenShot(time.time())
-				self.logger.error(e)
-				traceback.print_stack()
-				time.sleep(360)
+					try:
+						rating_liked = user.find_element(By.CLASS_NAME, "rating_liked")
+						liked = True
+					except NoSuchElementException:
+						rating_like = user.find_element(By.CLASS_NAME, "rating_like")
+						liked = False
+					# submit new user to database
+					if self.db.commitUser(username, age, location, match, enemy, liked):
+						self.scrape = True
+				except Exception as e:
+					self.takeScreenShot(time.time())
+					self.logger.error(e)
+					traceback.print_stack()
+					time.sleep(360)
+
+			c += 1
+			#self.logger.info("Pass: " + username)
+			pbar.update(c)
+		pbar.finish()
 
 	def visitProfile(self, username):
 		""" Visits the profile page of a user

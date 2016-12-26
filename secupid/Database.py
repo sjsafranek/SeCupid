@@ -36,6 +36,7 @@ class Database(object):
 		Session = sessionmaker(bind=engine)
 		self.session = Session()
 		self.update = update
+		self._cache = {}
 		self.logger = log("DB")
 
 	def _init_db(self):
@@ -51,9 +52,15 @@ class Database(object):
 				None if username not in database
 		"""
 		user = self.session.query(User).filter(User.username==username).first()
+		if user:
+			self._cache[username] = user
 		return user
 
 	def newUser(self, username, age, location, match, enemy, liked):
+		self.logger.debug("`newUser()` is now depricated. use `commitUser()`")
+		self.commitUser(username, age, location, match, enemy, liked)
+
+	def commitUser(self, username, age, location, match, enemy, liked):
 		""" Adds user to database
 			Args:
 				username (str): OkCupid username
@@ -62,40 +69,44 @@ class Database(object):
 				liked (bool): Whether user has been `liked`
 		"""
 		user = self.getUser(username)
+		new = False
 		if not user:
-			self.logger.info("Insert: " + username)
-			try:
-				user = User(username)
-				user.age = age
-				user.location = location
-				user.match = match
-				user.enemy = enemy
-				user.liked = liked
+			#self.logger.info("Insert: " + username)
+			user = User(username)
+			new = True
+		#elif self.update:
+			#self.logger.info("Update: " + username)
+		# apply attributes
+		user.age = age
+		user.location = location
+		user.match = match
+		user.enemy = enemy
+		user.liked = liked
+		try:
+			if new:
 				self.session.add(user)
 				self.session.commit()
+				# put user into database cache
+				self._cache[username] = user
 				return True
-			except Exception as e:
-				self.logger.error(e)
-				traceback.print_stack()
-				self.session.rollback()
-				return False
-		elif self.update:
-			self.logger.info("Update: " + username)
-			try:
-				user.age = age
-				user.location = location
-				user.match = match
-				user.enemy = enemy
-				user.liked = liked
+			else:
 				self.session.commit()
 				return False
-			except Exception as e:
-				self.logger.error(e)
-				traceback.print_stack()
-				self.session.rollback()
-				return False
-		#else:
-		#	self.logger.info("User already exisits:", username)
+		except Exception as e:
+			self.logger.error(e)
+			traceback.print_stack()
+			self.session.rollback()
+			return False
+		else:
+			return False
+
+	def commit(self):
+		try:
+			self.session.commit()
+		except Exception as e:
+			self.logger.error(e)
+			traceback.print_stack()
+			self.session.rollback()
 
 	def getUsers(self):
 		""" Retrieves all user records from database
@@ -103,6 +114,8 @@ class Database(object):
 				users list(Models.User): list of User model objects 
 		"""
 		users = self.session.query(User).all()
+		for user in users:
+			self._cache[user.username] = user
 		return users
 
 	def getLikedUsers(self):
@@ -111,6 +124,8 @@ class Database(object):
 				users list(Models.User): list of User model objects 
 		"""
 		users = self.session.query(User).filter(User.liked==True).all()
+		for user in users:
+			self._cache[user.username] = user
 		return users
 
 	def getProfile(self, username):
